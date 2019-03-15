@@ -237,7 +237,7 @@ func Continue() {
 		switch the_current_function_of_the_current_thread {
 		case "runtime.debugCallV1", "debugCall16", ...:
 			funcCallStep()
-			if call_injection_finished {
+			if callInjectionFinished {
 				return
 			}
 			continue
@@ -260,7 +260,7 @@ func funcCallStep() {
 	switch regs.AX() {
 	case debugCallAXPrecheckFailed:
 		read error from the stack
-		call_injection_finished = true
+		callInjectionFinished = true
 		
 	case debugCallAXCompleteCall:
 		copy argmem to the stack
@@ -269,7 +269,7 @@ func funcCallStep() {
 	case debugCallAXRestoreRegisters:
 		restore the copy of registers we saved in CallFunction
 		clean up call to runtime.debugCallV1
-		call_injection_finished = true
+		callInjectionFinished = true
 		
 	case debugCallAXReadReturn:
 		read return values
@@ -304,7 +304,151 @@ requires 4 call injections to be evaluated by a debugger:
 ####################################################################################
 # Call Injection in Delve, part 5: evaluating expressions with embedded calls
 
-<!-- TODO describe how to rearrange the code to allow evaluation of something like `1 + f() + g()` -->
+Let's start by handling the simpler of these two problems, i.e. evaluating expressions such as `1 + h(2)`, where the function call is not the topmost node of the parse tree.
+
+Expression evaluation is invoked, in Delve, by two paths: the first one is explicitly by calling the `print` command, the second is when evaluating the condition of a conditional breakpoint (those are set using the `cond` command). Both of those paths lead to the EvalExpression function, implemented in `pkg/proc/eval.go`.  
+
+This function parses an expression, using `go/parser.ParseExpr` and then evaluates the resulting ast.Expr recursively. A simplified implementation looks like this:
+
+```
+func EvalExpression(expr string) *Varaible {
+	t, _ := parser.ParseExpr(expr)
+	return evalAST(t)
+}
+
+func evalAST(t ast.Expr) *Variable {
+	switch node := t.(type) {
+	case *ast.Ident;
+		// find variable named node.Name and return it
+	
+	case *ast.ParenExpr:
+		return evalAST(node.X)
+	
+	case *ast.BinaryExpr:
+		x := evalAST(t.X)
+		y := evalAST(t.Y)
+		
+		return binaryOp(t, x, y)
+	
+	...
+	}
+}
+```
+
+It could be tempting to simply add another case clause to handle function calls like this:
+
+```
+	func evalAST(t ast.Expr) *Variable {
+		switch node := t.(type) {
+		...
+		case *ast.CallExpr:
+			return CallFunction(node)
+		...
+		}
+	}
+```
+
+This doesn't work. CallFunction will inject a function call and then call Continue which will, in turn, resume the target program. However, there is no guarantee that the next time the target program stops the injected function call will have terminated. Rather, it could be that an unrelated breakpoint was encountered; in those cases control should be returned to the user and expression evaluation should be suspended until the injected function call finishes.
+
+One way to solve this problem would be to rewrite evalAST in [Continuation passing style](https://en.wikipedia.org/wiki/Continuation-passing_style), i.e. "callbacks". This is a popular solution in many programming languages but it comes with its costs in terms of readability and debuggability.
+
+The solution that Delve adopted with PR XXXX <!-- TODO find out which PR --> was to run evalAST in a separate goroutine, using channels to communicate back to the "main" goroutine (i.e. the one that runs Continue). This is similar to the design demonstrated by Rob Pike in [Lexical Scanning in Go](https://www.youtube.com/watch?v=HxaD_trXwRE).
+
+The eval goroutine and the continue goroutine use two channels to communicate: continueRequest and continueCompleted. Eval will write a message to continueRequest to request a call to Continue from the continue goroutine, in turn the continue goroutine will write back to continueCompleted to signal that Continue stopped at one of the INT 3 instructions used by the function injection protocol.
+
+The changes to Continue look like this:
+
+```
+func Continue() {
+	for {
+		call ContinueOnce()
+		
+		switch the_current_function_of_the_current_thread {
+		case "runtime.debugCallV1", "debugCall16", ...:
+			continueCompleted <- struct{}{}
+			contReq := <- continueRequest
+			if contReq.callInjectionFinished {
+				return
+			}
+			// otherwise Continue keeps looping
+		}
+		
+		evaluate condition of all breakpoints we hit
+		return if a breakpoint has condition == true
+	}
+}
+```
+
+evalAST is modified like this:
+
+```
+func evalAST(t ast.Expr) *Variable {
+	switch node := t.(type) {
+	...
+	
+	case *ast.CallExpr:
+		return evalFunctionCall(node)
+	
+	...
+	}
+}
+```
+
+and evalFunctionCall is a function inspired to the previous CallFunction function:
+
+```
+func evalFunctionCall(node *ast.CallExpr) *Variable {
+	fn := function associated with expr.Fun
+	for _, arg := range expr.Args {
+		evalute the arg expression and save it in debugger memory, write it to the 'argmem' byte buffer
+	}
+	
+	regs := currentThread.Registers()
+	
+	save a copy of regs
+	
+	if err := callOP(currentThread, regs, entryPointOf("runtime.debugCallV1")); err != nil {
+		return err
+	}
+	
+	// write the size of the argument frame we need for our final injected call to the stack
+	if err := writePointer(thread, regs.SP()-3*PointerSize, len(argmem)); err != nil {
+		return err
+	}
+	
+	for {
+		continueRequest <- contReq{ callInjectionFinished: false }
+		<- continueCompleted
+		
+		funcCallStep()
+		if callInjectionFinished {
+			continueRequest <- contReq{ callInjectionFinished: true }
+			break
+		}
+	}
+	
+	return the return values read by the last call to funcCallStep
+}
+```
+
+With this setup with can write a version of EvalExpression that can handle function calls:
+
+```
+func EvalExpressionWithCalls(expr string) {
+	t, _ := parser.ParseExpr(expr)
+	go evalAST(t)
+	contReq := <- continueRequest
+	if !contReq.callInjectionFinished {
+		Continue()
+	}
+}
+```
+
+I should probably remind people, at this point, that this is of course just pseudocode and that I'm glossing over a number of nasty implementation details. A more accurate description of this would require describing and annotating much larger chunks of Delve's codebase.
+
+####################################################################################
+# Call Injection in Delve, part 6: evaluating expressions with embedded calls, part 2
+
 <!-- TODO describe changes to support nested function calls -->
 
 <!--
