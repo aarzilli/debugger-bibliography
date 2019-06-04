@@ -193,6 +193,18 @@ This section contains anything pertaining interpreting debug symbols and extract
 
 For a modern debugger you only need to be concerned with three executable formats (PE, ELF and Mach-O) and two debug formats (DWARF and PDB). Anything else is of historical interest only at this point.
 
+* **Practical Binary Analysis**
+	
+	This book has a good introduction to both ELF and PE, as well as other interesting things.
+	
+	```
+	Practical Binary Analysis
+	Build Your Own Linux Tools for Binary Instrumentation, Analysis, and Disassembly
+	by Dennis Andriesse
+	no starch press, December 2018, 456 pp.
+	ISBN-13: 978-1-59327-912-7
+	```
+
 * **Portable Executable (PE)**
 
 	This is the executable file format used on Windows. It obsoletes the MS-DOS MZ file format and is derived from COFF (Common Object File Format), an older UNIX executable file format.
