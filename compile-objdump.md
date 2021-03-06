@@ -1,4 +1,4 @@
---
+---
 title: Compiling a cross-platform objdump
 ...
 The version of objdump included in GNU's binutils is, in theory, capable of understanding executable files for a platform (OS/CPU architecture combination) different from the one you are using. However this is disabled by default and Linux distributions do not bother enabling it. The result is that, for example, trying to view a Mach-O file on Linux will result in the `File format not recognized` error.
