@@ -244,6 +244,10 @@ For a modern debugger you only need to be concerned with three executable format
 	* [Wikipedia: Mach-O article](https://en.wikipedia.org/wiki/Mach-O)
 	* [Mac OS X ABI Mach-O File Format Reference](https://web.archive.org/web/20090901205800/http://developer.apple.com/mac/library/documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html)
 
+* **Examining executable files**
+	
+	To examine executable files you can use `objdump` on Linux or `otool` on macOS. My [diexplorer](https://github.com/aarzilli/diexplorer) can show the debug sections inside a browser window, with cross-references. Sometimes it is useful to examine executable files for an architecture other than the one you are using, diexplorer can do that, objdump from GNU's binutils can also do that, but only if it is build in a special way -- which Linux distributions usually don't do. See [compiling a cross-platform objdump](compile-objdump.html).
+
 * **DWARF debug format**
 
 	This is the debug format used on most unix-like systems, including Linux and macOS. It obsoletes [stabs](https://en.wikipedia.org/wiki/Stabs).

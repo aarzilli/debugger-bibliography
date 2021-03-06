@@ -212,6 +212,8 @@ ISBN-13: 978-1-59327-912-7</code></pre></li>
 <li><a href="https://en.wikipedia.org/wiki/Mach-O">Wikipedia: Mach-O article</a></li>
 <li><a href="https://web.archive.org/web/20090901205800/http://developer.apple.com/mac/library/documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html">Mac OS X ABI Mach-O File Format Reference</a></li>
 </ul></li>
+<li><p><strong>Examining executable files</strong></p>
+<p>To examine executable files you can use <code>objdump</code> on Linux or <code>otool</code> on macOS. My <a href="https://github.com/aarzilli/diexplorer">diexplorer</a> can show the debug sections inside a browser window, with cross-references. Sometimes it is useful to examine executable files for an architecture other than the one you are using, diexplorer can do that, objdump from GNU's binutils can also do that, but only if it is build in a special way -- which Linux distributions usually don't do. See <a href="compile-objdump.html">compiling a cross-platform objdump</a>.</p></li>
 <li><p><strong>DWARF debug format</strong></p>
 <p>This is the debug format used on most unix-like systems, including Linux and macOS. It obsoletes <a href="https://en.wikipedia.org/wiki/Stabs">stabs</a>.</p>
 <ul>

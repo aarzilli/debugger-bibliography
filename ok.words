@@ -90,3 +90,16 @@ Lucent
 Proc
 USENIX
 Conf
+Andriesse
+objdump
+otool
+diexplorer
+html
+binutils
+gdbsupport
+gprof
+ld
+libiberty
+Makefile
+bfd
+BFDNAME

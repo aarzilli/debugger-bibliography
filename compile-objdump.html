@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+<body>
+<p>-- title: Compiling a cross-platform objdump ... The version of objdump included in GNU's binutils is, in theory, capable of understanding executable files for a platform (OS/CPU architecture combination) different from the one you are using. However this is disabled by default and Linux distributions do not bother enabling it. The result is that, for example, trying to view a Mach-O file on Linux will result in the <code>File format not recognized</code> error.</p>
+<p>Building your cross-platform version of objdump used to be easy, just use <code>./configure --enable-targets=all</code> when building binutils. However since the repositories of binutils and gdb have been merged things got more complicated.</p>
+<p>There might be an easier way to do this, but I don't know it:</p>
+<ul>
+<li>In the cloned binutils-gdb repository run <code>./configure --without-gdb --without-gas --without-gdbserver --without-gdbsupport --without-gold --without-gprof --without-ld --without-libiberty --with-binutils</code> (maybe the correct version is <code>--disabled-gdb</code>?)</li>
+<li>Edit the generated Makefile, Add the <code>--enable-targets=all</code> option to the <code>configure-binutils</code> and <code>configure-bfd</code> targets, on the same line that contains the <code>--target=${target_alias}</code> option</li>
+<li>Run <code>make -j4</code></li>
+<li>Your cross-platform objdump is in <code>binutils/objdump</code></li>
+</ul>
+<p>You can see a list of all supported targets by running <code>objdump -i</code> and set the target explicitly with <code>objdump -b BFDNAME</code>, usually this is not necessary, objdump will determine the correct target on its own. See also <a href="https://sourceware.org/binutils/docs/binutils/Target-Selection.html">Binutils Target Selection</a>.</p>
+</body>
+</html>
