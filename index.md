@@ -15,7 +15,7 @@ This is a hierarchical annotated bibliography of resources related to the develo
 	4. [Other](#other)
 4. [Symbolic layer resources](#symbolic-layer-resources)
 5. [Miscellaneous stuff](#miscellaneous-stuff)
-	
+
 
 <!-- ---------------------------------------------------------------------------------------------- -->
 # Introductory material
