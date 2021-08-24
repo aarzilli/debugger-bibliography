@@ -185,6 +185,8 @@ This lists reference useful for writing the "target layer" of a debugger, i.e. t
 	
 	* [Gdb Remote Serial Protocol](https://sourceware.org/gdb/onlinedocs/gdb/Remote-Protocol.html): base specification of the protocol
 	* [LLDB extensions](https://github.com/llvm-mirror/lldb/blob/master/docs/lldb-gdb-remote.txt): protocol extensions supported by LLDB
+
+* [**Notes on hardware breakpoints/watchpoints**](hwbreak.html)
 	
 <!-- ---------------------------------------------------------------------------------------------- -->
 # Symbolic Layer Resources
