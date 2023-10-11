@@ -74,6 +74,14 @@ This is a hierarchical annotated bibliography of resources related to the develo
 	ISBN 0−8144−7168−4
 	```
 
+* **Tim Misiak's stuff**
+
+	Former Microsoft Debugger Platform engineer, he worked on WinDbg and KD. Has a blog where he talks about debuggers (including a tutorial on implementing a toy debugger for Windows in Rust) and a Youtube channel with interviews (also about debuggers).
+	
+	* [Timdbg blog](https://www.timdbg.com/)
+	* [Tim Misiak's Youtube channel](https://www.youtube.com/channel/UCyQ7p63-9V9PZJvgHLKgsaw)
+	* [Tim Misiak on the website formerly known as Twitter](https://x.com/timmisiak)
+
 <!-- ---------------------------------------------------------------------------------------------- -->
 # Delve specific resources
 
