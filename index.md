@@ -154,7 +154,7 @@ This lists reference useful for writing the "target layer" of a debugger, i.e. t
 	
 	To read a minidump start reading the header, get the offset of the stream directory from it, then read the stream directory and form that read the streams you need.
 	
-	* [_MINIDUMP_HEADER structure](https://docs.microsoft.com/en-us/windows/desktop/api/minidumpapiset/ns-minidumpapiset-_minidump_header): describes the minidump header format, follow links for a description of the stream directory and each individual stream.
+	* [_MINIDUMP_HEADER structure](https://docs.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_header): describes the minidump header format, follow links for a description of the stream directory and each individual stream.
 	* [Chromium breakpad minidump format header](https://chromium.googlesource.com/breakpad/breakpad/+/master/src/google_breakpad/common/minidump_format.h)
 
 * **Thread Naming on Windows**

@@ -5,13 +5,27 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>Notes on Hardware Breakpoints and Watchpoints</title>
-  <style type="text/css">
-      code{white-space: pre-wrap;}
-      span.smallcaps{font-variant: small-caps;}
-      span.underline{text-decoration: underline;}
-      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="style.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
 </head>
 <body>
 <header id="title-block-header">
@@ -19,7 +33,9 @@
 </header>
 <h1 id="amd64">AMD64</h1>
 <p>Hardware breakpoints on amd64 are fairly well documented, they are controlled by registers DR0 through DR7.</p>
-<p>Register DR7 is a control register, that determines which hardware breakpoints/watchpoints are enabled and how they work. DR6 is a status register will tell you which breakpoint/watchpoint was triggered. Registers DR0 through DR5 contain the address of each breakpoint or watchpoint, DR4 and DR5 are reserved for the kernel.</p>
+<p>Register DR7 is a control register, that determines which hardware breakpoints/watchpoints are enabled and how they work.
+DR6 is a status register will tell you which breakpoint/watchpoint was triggered.
+Registers DR0 through DR5 contain the address of each breakpoint or watchpoint, DR4 and DR5 are reserved for the kernel.</p>
 <p>Precise documentation on the layout of DR7 and DR6 can be found in “IA-32 Architectures Software Developer’s Manual, Vol. 3B, section 17.2”.</p>
 <h2 id="enabling-a-breakpoint-or-watchpoint">Enabling a breakpoint or watchpoint</h2>
 <ul>
@@ -32,7 +48,8 @@
 <li>Check the relative bit in DR6, it is the responsibility of the debugger to clear this bit before restarting</li>
 </ul>
 <h2 id="linux-interface">Linux Interface</h2>
-<p>On linux the debug registers are stored in the user struct which can be read and written using PTRACE_PEEKUSER and PTRACE_POKEUSER. To determine the offsets for the debug registers you can either use the definition of the user struct, in source/arch/x86/kernel/ptrace.c or just use the constant 848:</p>
+<p>On linux the debug registers are stored in the user struct which can be read and written using PTRACE_PEEKUSER and PTRACE_POKEUSER.
+To determine the offsets for the debug registers you can either use the definition of the user struct, in source/arch/x86/kernel/ptrace.c or just use the constant 848:</p>
 <pre><code>ptrace(PEEK_USER, pid, (void *)848, &amp;v);</code></pre>
 <p>reads the value of DR0 into v0.</p>
 <p>Unlike on windows all 8 registers are present in the user struct, reading DR4 and DR5 (which are reserved for kernel use) will always get you 0x0. Trying to write DR4 and DR5 will result in an error (EIO).</p>
@@ -44,7 +61,9 @@
 <p>On arm64 there can be a maximum of 16 watchpoints and 16 hardware breakpoints, however specific implementations of arm64 can (and often will) offer fewer.</p>
 <p>All of the following can be referenced in “ARM - Architecture Reference Manual Armv8, for A-profile architectures”, the number in parenthesis will be the section number.</p>
 <p>The first register of interest is ID_AA64DFR0_EL1 (AArch64 Debug Feature Register 0) which will tell you how many watchpoint and hardware breakpoints exist in your particular CPU (D13.2.59).</p>
-<p>Each breakpoint is described by a pair of registers: * DBGBCRn_EL1 (where n = 0 .. 16) is the breakpoint control register (D13.3.2) * DBGBVRn_EL1 (where n = 0 .. 16) is the breakpoint value register, which will contain the address of the instruction at which the breakpoint should trigger. (D13.3.3)</p>
+<p>Each breakpoint is described by a pair of registers:
+* DBGBCRn_EL1 (where n = 0 .. 16) is the breakpoint control register (D13.3.2)
+* DBGBVRn_EL1 (where n = 0 .. 16) is the breakpoint value register, which will contain the address of the instruction at which the breakpoint should trigger. (D13.3.3)</p>
 <p>The same goes for watchpoints which are described by</p>
 <ul>
 <li>DBGWCRn_EL1 (where n = 0 .. 16) which determines if the watchpoint is enabled, if it is a read or write breakpoint and the length of the data (D13.3.11)</li>
